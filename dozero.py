@@ -1,68 +1,102 @@
-class GameLogger:
+from abc import ABC, abstractmethod
+
+class FilaImpressao:
     _instance = None
 
     def __new__(cls):
-        
         if cls._instance is None:
-            cls._instance = super(GameLogger, cls).__new__(cls)
-            cls._instance.history = []
+            cls._instance = super(FilaImpressao, cls).__new__(cls)
+            cls._instance.fila = []
         return cls._instance
 
-    def log(self, message):
-        print(f"[LOG]: {message}")
-        self.history.append(message)
+    def adicionar_documento(self, documento):
+        print(f" Documento recebido na fila >> {documento[:15]}...")
+        self.fila.append(documento)
 
-    def show_history(self):
-        print("\n--- Histórico Completo ---")
-        for event in self.history:
-            print(event)
+    def imprimir_todos(self):
+        print("\n--- INICIANDO IMPRESSÃO ---")
+        if not self.fila:
+            print("Fila vazia.")
+        for i, doc in enumerate(self.fila, 1):
+            print(f"Imprimindo Doc {i}:\n{doc}\n{'-'*30}")
+        self.fila = []
 
-logger1 = GameLogger()
-logger1.log("Jogo começou.")
-
-logger2 = GameLogger()
-logger2.log("O herói entrou na caverna.")
-
-print(f"\nLogger1 é igual ao Logger2? {logger1 is logger2}") 
-logger1.show_history()
-
-class Weapon:
-    def __init__(self, name, damage, element):
-        self.name = name
-        self.damage = damage
-        self.element = element
-
-    def __str__(self):
-        return f"[{self.name}] Dano: {self.damage} | Elemento: {self.element}"
-
-class WeaponBuilder:
+class RelatorioDraft:
     def __init__(self):
-        self._name = "Arma Básica"
-        self._damage = 1
-        self._element = "Normal"
+        self.titulo = ""
+        self.corpo = []
+        self.rodape = ""
 
-    def set_name(self, name):
-        self._name = name
+class RelatorioBuilder:
+    def __init__(self):
+        self.draft = RelatorioDraft()
+
+    def set_titulo(self, texto):
+        self.draft.titulo = texto
         return self
 
-    def set_damage(self, damage):
-        self._damage = damage
+    def add_paragrafo(self, texto):
+        self.draft.corpo.append(texto)
         return self
 
-    def set_element(self, element):
-        self._element = element
+    def set_rodape(self, texto):
+        self.draft.rodape = texto
         return self
 
     def build(self):
-        return Weapon(self._name, self._damage, self._element)
+        return self.draft
 
-faca = WeaponBuilder().set_name("Faca de Cozinha").build()
-print(faca)
+class Exportador(ABC):
+    @abstractmethod
+    def exportar(self, draft: RelatorioDraft):
+        pass
 
-martelo_do_trovao = (WeaponBuilder()
-                     .set_name("Mjolnir")
-                     .set_damage(999)
-                     .set_element("Raio")
-                     .build())
+class ExportadorHTML(Exportador):
+    def exportar(self, draft):
+        html = f"<html>\n<h1>{draft.titulo}</h1>\n<body>"
+        for p in draft.corpo:
+            html += f"\n  <p>{p}</p>"
+        html += f"\n  <footer>{draft.rodape}</footer>\n</body>\n</html>"
+        return html
 
-print(martelo_do_trovao)
+class ExportadorTXT(Exportador):
+    def exportar(self, draft):
+        txt = f"=== {draft.titulo.upper()} ===\n\n"
+        for p in draft.corpo:
+            txt += f"{p}\n"
+        txt += f"\n--- {draft.rodape} ---"
+        return txt
+
+class ExportadorFactory:
+    def criar_exportador(formato):
+        if formato == "html":
+            return ExportadorHTML()
+        elif formato == "txt":
+            return ExportadorTXT()
+        else:
+            print(f"Formato '{formato}' não suportado. Usando TXT padrão.")
+            return ExportadorTXT()
+
+if __name__ == "__main__":
+    print("=== SISTEMA GERADOR DE RELATÓRIOS TG_CIA_LTA ===\n")
+
+    dados_relatorio = (RelatorioBuilder()
+                       .set_titulo("Relatório Mensal de Vendas")
+                       .add_paragrafo("O faturamento subiu 22% em relação a outubro.")
+                       .add_paragrafo("O produto mais vendido foi o 'Botijão P13'.")
+                       .add_paragrafo("A meta para o próximo mês é dobrar a meta.")
+                       .set_rodape("Tião do gás e cia")
+                       .build())
+
+    formato_escolhido = "txt"
+    
+    exportador = ExportadorFactory.criar_exportador(formato_escolhido)
+
+    documento_final = exportador.exportar(dados_relatorio)
+
+    spooler = FilaImpressao()
+    spooler.adicionar_documento(documento_final)
+
+    spooler.adicionar_documento("Lembrete: Reunião às 09h.")
+
+    spooler.imprimir_todos()
