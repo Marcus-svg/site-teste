@@ -35,12 +35,3 @@ O sistema foi dividido em responsabilidades únicas, onde cada classe tem um pap
 **O Problema:** Precisamos adicionar novos formatos (como PDF ou JSON) no futuro sem quebrar o código existente.
 **A Solução:** Uso de Herança e Classes Abstratas. O código cliente chama `.exportar()` e o objeto executa sua versão específica (Polimorfismo).
 * *Localização:* `class ExportadorHTML`, `ExportadorCSV`, etc.
-
----
-
-## 🚀 Como Executar
-
-1. Certifique-se de ter o Python instalado.
-2. Clone o repositório:
-   ```bash
-   git clone [https://github.com/SEU-USUARIO/sistema-relatorios-oop.git](https://github.com/SEU-USUARIO/sistema-relatorios-oop.git)
